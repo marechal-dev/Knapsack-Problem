@@ -1,0 +1,17 @@
+{
+  "name": "knapsack-problem",
+  "version": "1.0.0",
+  "description": "Implementation and Analysis of the Knapsack Problem in TypeScript",
+  "main": "build/main.js",
+  "scripts": {
+    "build": "tsc src/implementation/main.ts --outDir build",
+    "execute": "node build/main.js"
+  },
+  "author": "Pietro Piva Vieira",
+  "license": "MIT",
+  "devDependencies": {
+    "@faker-js/faker": "^8.2.0",
+    "@types/node": "^20.8.10",
+    "typescript": "^5.2.2"
+  }
+}
