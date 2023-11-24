@@ -13,7 +13,7 @@ export function generateRandomItems(n: number, knapsackMaxWeight: number): Item[
       }),
       faker.number.int({
         min: 1,
-        max: knapsackMaxWeight + 1,
+        max: 100,
       }),
     ));
   }

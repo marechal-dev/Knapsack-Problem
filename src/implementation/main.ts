@@ -1,112 +1,85 @@
+import { Item } from "./entities/item";
 import { generateRandomItems } from "./helpers/generate-random-items";
 import { bruteForce, memoized } from "./solution";
 
+const [testsRaw, knapsackMaxWeightRaw, numberOfItemsRaw, stepRaw] = process.argv.slice(2);
+
+const tests = Number(testsRaw);
+let knapsackMaxWeight = Number(knapsackMaxWeightRaw);
+let numberOfItems = Number(numberOfItemsRaw);
+const step = Number(stepRaw);
+
 console.log('Knapsack Problem');
-console.log('Generating time tags...');
-const rbf10 = 'rbf-10';
-const rbf15 = 'rbf-15';
-const rbf20 = 'rbf-20';
-const rbf30 = 'rbf-30';
 
-const memo10 = 'memo-10';
-const memo15 = 'memo-15';
-const memo20 = 'memo-20';
-const memo30 = 'memo-30';
+const measurements = {
+  iterations: 0,
+};
 
-console.log('Generating random items...')
-const items10 = generateRandomItems(10, 30);
-const items15 = generateRandomItems(15, 31);
-const items20 = generateRandomItems(20, 32);
-const items30 = generateRandomItems(30, 33);
-
-console.log('First Implementation: Recursive Brute-Force');
-
-console.log('10 items');
-console.time(rbf10);
-const rbfe10 = bruteForce(
-  30,
-  items10,
-  items10.length,
-);
-console.log(rbfe10);
-console.timeEnd(rbf10);
 console.log();
 
-console.log('15 items');
-console.time(rbf15);
-const rbfe15 = bruteForce(
-  31,
-  items15,
-  items15.length,
-);
-console.log(rbfe15);
-console.timeEnd(rbf15);
+const testSet: Item[][] = [];
+
+console.log('Generating Test Set...');
+for (let i = 0; i < tests; i++) {
+  testSet.push(
+    generateRandomItems(
+      numberOfItems,
+      knapsackMaxWeight,
+    ),
+  )
+
+  numberOfItems += step;
+}
+
 console.log();
 
-console.log('20 items');
-console.time(rbf20);
-const rbfe20 = bruteForce(
-  32,
-  items20,
-  items20.length,
-);
-console.log(rbfe20);
-console.timeEnd(rbf20);
-console.log();
+console.log('Simple Recursive Approach');
+for (let i = 0; i < tests; i++) {
+  console.log(`Running Test ${i + 1} with ${knapsackMaxWeight} as knapsack max weight`);
+  console.log(`Running with ${testSet[i].length} items`);
 
-console.log('30 items');
-console.time(rbf30);
-const rbfe30 = bruteForce(
-  33,
-  items30,
-  items30.length,
-);
-console.log(rbfe30);
-console.timeEnd(rbf30);
-console.log();
+  const recStart = performance.now();
+  bruteForce(
+    knapsackMaxWeight,
+    testSet[i],
+    testSet[i].length,
+    measurements,
+  )
+  const recStop = performance.now();
 
-console.log('Second Implementation: Memoized Recursion');
+  const recDifference = recStop - recStart;
 
-console.log('10 items');
-console.time(memo10);
-const memoe10 = memoized(
-  30,
-  items10,
-  items10.length,
-);
-console.log(memoe10);
-console.timeEnd(memo10);
-console.log();
+  console.log(`Test ${i + 1} execution time: ${recDifference}ms`)
+  console.log(`Test ${i + 1} iterations: ${measurements.iterations}`);
+  console.log()
 
-console.log('100 items');
-console.time(memo15);
-const memoe15 = memoized(
-  31,
-  items15,
-  items15.length,
-);
-console.log(memoe15);
-console.timeEnd(memo15);
-console.log();
+  measurements.iterations = 0;
+}
 
-console.log('200 items');
-console.time(memo20);
-const memoe20 = memoized(
-  32,
-  items20,
-  items20.length,
-);
-console.log(memoe20);
-console.timeEnd(memo20);
-console.log();
+console.log()
 
-console.log('300 items');
-console.time(memo30);
-const memoe30 = memoized(
-  33,
-  items30,
-  items30.length,
-);
-console.log(memoe30);
-console.timeEnd(memo30);
-console.log();
+measurements.iterations = 0;
+
+console.log('Dynamic Programming Approach');
+for (let i = 0; i < tests; i++) {
+  console.log(`Running Test ${i + 1} with ${knapsackMaxWeight} as knapsack max weight`);
+  console.log(`Running with ${testSet[i].length} items`);
+
+  const dynStart = performance.now();
+  memoized(
+    knapsackMaxWeight,
+    testSet[i],
+    testSet[i].length,
+    measurements,
+  );
+  const dynStop = performance.now();
+
+  const dynDifference = dynStop - dynStart;
+
+  console.log(`Test ${i + 1} execution time: ${dynDifference}ms`)
+  console.log(`Test ${i + 1} iterations: ${measurements.iterations}`)
+  console.log();
+
+  knapsackMaxWeight += step;
+  measurements.iterations = 0;
+}
