@@ -5,10 +5,11 @@ set -euo pipefail
 trap 'echo "${BASH_SOURCE}:${LINENO}:${FUNCNAME:-}"' ERR
 
 TESTS=$1
-KNAPSACK_SIZE=$2
-NUMBER_OF_ITEMS=$3
-STEP=$4
-SHOULD_OUTPUT_TEST_RESULTS=$5
+TRIALS_PER_TEST=$2
+INITIAL_KNAPSACK_SIZE=$3
+NUMBER_OF_ITEMS=$4
+STEP=$5
+SHOULD_OUTPUT_TEST_RESULTS=$6
 
 echo 'Knapsack Algorithm Test Runner'
 
@@ -21,6 +22,6 @@ echo 'Compiling TypeScript source code...'
 npm run build
 
 echo 'Tests commencing:'
-npm run execute -- "$TESTS" "$KNAPSACK_SIZE" "$NUMBER_OF_ITEMS" "$STEP" "$SHOULD_OUTPUT_TEST_RESULTS"
+npm run execute -- "$TESTS" "$TRIALS_PER_TEST" "$INITIAL_KNAPSACK_SIZE" "$NUMBER_OF_ITEMS" "$STEP" "$SHOULD_OUTPUT_TEST_RESULTS"
 
 

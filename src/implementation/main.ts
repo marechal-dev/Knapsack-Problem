@@ -1,13 +1,15 @@
 import { createWriteStream } from 'node:fs';
 
 import { Item } from "./entities/item";
+import { CoolMath } from './helpers/cool-math';
 import { generateRandomItems } from "./helpers/generate-random-items";
 import { bruteForce, memoized } from "./solution";
 
-const [testsRaw, knapsackMaxWeightRaw, numberOfItemsRaw, stepRaw, shouldOutputTestResultsRaw] = process.argv.slice(2);
+const [testsRaw, trialsPerTestRaw, initialKnapsackMaxWeightRaw, numberOfItemsRaw, stepRaw, shouldOutputTestResultsRaw] = process.argv.slice(2);
 
 const tests = Number(testsRaw);
-let knapsackMaxWeight = Number(knapsackMaxWeightRaw);
+const trialsPerTest = Number(trialsPerTestRaw);
+let knapsackMaxWeight = Number(initialKnapsackMaxWeightRaw);
 let numberOfItems = Number(numberOfItemsRaw);
 const step = Number(stepRaw);
 const shouldOutputTestResults = Boolean(shouldOutputTestResultsRaw);
@@ -48,30 +50,43 @@ for (let i = 0; i < tests; i++) {
   console.log(`Running Test ${i + 1} with ${knapsackMaxWeight} as knapsack max weight`);
   console.log(`Running with ${testSet[i].length} items`);
 
-  const recStart = performance.now();
-  bruteForce(
-    knapsackMaxWeight,
-    testSet[i],
-    testSet[i].length,
-    measurements,
-  )
-  const recStop = performance.now();
+  let executionTimes: number[] = [];
+  let iterations: number[] = [];
+  for (let j = 0; j < trialsPerTest; j++) {
+    const recStart = performance.now();
+    bruteForce(
+      knapsackMaxWeight,
+      testSet[i],
+      testSet[i].length,
+      measurements,
+    )
+    const recStop = performance.now();
 
-  const recDifference = recStop - recStart;
+    const recDifference = recStop - recStart;
+    executionTimes.push(recDifference);
+    iterations.push(measurements.iterations)
 
-  console.log(`Test ${i + 1} execution time: ${recDifference}ms`)
-  console.log(`Test ${i + 1} iterations: ${measurements.iterations}`);
+    console.log(`Test ${i + 1} Trial ${j + 1} execution time: ${recDifference}ms`)
+    console.log(`Test ${i + 1} Trial ${j + 1} iterations: ${measurements.iterations}`);
+
+    measurements.iterations = 0;
+  }
+
   console.log()
 
   if (shouldOutputTestResults) {
     testsResults.bruteForce[i + 1] = {
       knapsackMaxWeight,
       inputSize: testSet[i].length,
-      executionTimeInMS: recDifference,
-      iterations: measurements.iterations,
+      executionTimeInMS: executionTimes.reduce((acc, cur) => acc + cur, 0),
+      executionTimeMean: CoolMath.mean(executionTimes),
+      executionTimeStd: CoolMath.standardDeviation(executionTimes, true),
+      iterations: iterations.reduce((acc, cur) => acc + cur, 0),
     };
   }
 
+  executionTimes = [];
+  iterations = [];
   measurements.iterations = 0;
 }
 
@@ -84,47 +99,57 @@ for (let i = 0; i < tests; i++) {
   console.log(`Running Test ${i + 1} with ${knapsackMaxWeight} as knapsack max weight`);
   console.log(`Running with ${testSet[i].length} items`);
 
-  const dynStart = performance.now();
-  memoized(
-    knapsackMaxWeight,
-    testSet[i],
-    testSet[i].length,
-    measurements,
-  );
-  const dynStop = performance.now();
+  let executionTimes: number[] = [];
+  let iterations: number[] = [];
+  for (let j = 0; j < trialsPerTest; j++) {
+    const dynStart = performance.now();
+    memoized(
+      knapsackMaxWeight,
+      testSet[i],
+      testSet[i].length,
+      measurements,
+    );
+    const dynStop = performance.now();
 
-  const dynDifference = dynStop - dynStart;
+    const dynDifference = dynStop - dynStart;
+    executionTimes.push(dynDifference);
+    iterations.push(measurements.iterations)
 
-  console.log(`Test ${i + 1} execution time: ${dynDifference}ms`)
-  console.log(`Test ${i + 1} iterations: ${measurements.iterations}`)
+    console.log(`Test ${i + 1} Trial ${j + 1} execution time: ${dynDifference}ms`)
+    console.log(`Test ${i + 1} Trial ${j + 1} iterations: ${measurements.iterations}`)
+  }
+
   console.log();
 
   if (shouldOutputTestResults) {
     testsResults.memoized[i + 1] = {
       knapsackMaxWeight,
       inputSize: testSet[i].length,
-      executionTimeInMS: dynDifference,
-      iterations: measurements.iterations,
+      executionTimeInMS: executionTimes.reduce((acc, cur) => acc + cur, 0),
+      executionTimeMean: CoolMath.mean(executionTimes),
+      executionTimeStd: CoolMath.standardDeviation(executionTimes, true),
+      iterations: iterations.reduce((acc, cur) => acc + cur, 0),
     };
   }
 
-  knapsackMaxWeight += step;
+  executionTimes = [];
+  iterations = [];
   measurements.iterations = 0;
 }
 
 if (shouldOutputTestResults) {
   console.log('Processing test results to CSV file...');
 
-  const csvHeader = `implementation,test,knapSackMaxWeight,inputSize,executionTimeInMS,iterations\n`;
+  const csvHeader = `implementation,test,knapSackMaxWeight,inputSize,executionTimeInMS,executionTimeMean,executionTimeStd,iterations\n`;
 
   const bruteForceResults = Object.entries(testsResults.bruteForce);
   const bruteForceLines = bruteForceResults.map(([key, value]) => {
-    return `bruteForce,${key},${value.knapsackMaxWeight},${value.inputSize},${value.executionTimeInMS},${value.iterations}\n`
+    return `bruteForce,${key},${value.knapsackMaxWeight},${value.inputSize},${value.executionTimeInMS},${value.executionTimeMean},${value.executionTimeStd},${value.iterations}\n`
   });
 
   const memoizedResults = Object.entries(testsResults.memoized);
   const memoizedLines = memoizedResults.map(([key, value]) => {
-    return `memoized,${key},${value.knapsackMaxWeight},${value.inputSize},${value.executionTimeInMS},${value.iterations}\n`;
+    return `memoized,${key},${value.knapsackMaxWeight},${value.inputSize},${value.executionTimeInMS},${value.executionTimeMean},${value.executionTimeStd},${value.iterations}\n`;
   });;
 
   const resultFileWriteStream = createWriteStream('./results.csv', {

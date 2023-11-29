@@ -1,9 +1,5 @@
 import { Item } from "./entities/item";
 
-function greater(a: number, b: number) {
-  return a > b ? a : b;
-}
-
 export function bruteForce(
   remainingWeight: number,
   items: Item[],
