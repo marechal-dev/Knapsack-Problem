@@ -1,6 +1,10 @@
 export class CoolMath {
   public static mean(values: number[]): number {
-    const summation = values.reduce((acc, current) => acc + current, 0);
+    let summation = 0;
+
+    for (let i = 0; i < values.length; i++) {
+      summation += values[i];
+    }
 
     return summation / values.length;
   }
