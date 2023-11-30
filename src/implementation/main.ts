@@ -5,13 +5,18 @@ import { CoolMath } from './helpers/cool-math';
 import { generateRandomItems } from "./helpers/generate-random-items";
 import { bruteForce, memoized } from "./solution";
 
-const [testsRaw, trialsPerTestRaw, initialKnapsackMaxWeightRaw, numberOfItemsRaw, stepRaw, shouldOutputTestResultsRaw] = process.argv.slice(2);
+const [
+  testsRaw,
+  trialsPerTestRaw,
+  knapsackPercentageRaw,
+  numberOfItemsRaw,
+  shouldOutputTestResultsRaw
+] = process.argv.slice(2);
 
 const tests = Number(testsRaw);
 const trialsPerTest = Number(trialsPerTestRaw);
-let knapsackMaxWeight = Number(initialKnapsackMaxWeightRaw);
-let numberOfItems = Number(numberOfItemsRaw);
-const step = Number(stepRaw);
+// const knapsackPercentage = Number(knapsackPercentageRaw);
+// let numberOfItems = Number(numberOfItemsRaw);
 const shouldOutputTestResults = Boolean(shouldOutputTestResultsRaw);
 
 console.log('Knapsack Problem');
@@ -31,23 +36,48 @@ const testsResults: TestResult = {
   memoized: {},
 };
 
+const itensPerTest = [10,
+  50,
+  100,
+  150,
+  170,
+  250,
+  500,
+  1000,
+  5000
+]
+
+const knapsackSizes = [
+  5,
+  5,
+  10,
+  15,
+  17,
+  25,
+  50,
+  100,
+  500,
+]
+
 console.log('Generating Test Set...');
 for (let i = 0; i < tests; i++) {
   testSet.push(
     generateRandomItems(
-      numberOfItems,
-      knapsackMaxWeight,
+      itensPerTest[i],
+      knapsackSizes[i],
     ),
   )
-
-  numberOfItems += step;
 }
 
 console.log();
 
 console.log('Simple Recursive Approach');
 for (let i = 0; i < tests; i++) {
-  console.log(`Running Test ${i + 1} with ${knapsackMaxWeight} as knapsack max weight`);
+  if (itensPerTest[i] > 170) {
+    break;
+  }
+
+  console.log(`Running Test ${i + 1} with ${knapsackSizes[i]} as knapsack max weight`);
   console.log(`Running with ${testSet[i].length} items`);
 
   let executionTimes: number[] = [];
@@ -55,7 +85,7 @@ for (let i = 0; i < tests; i++) {
   for (let j = 0; j < trialsPerTest; j++) {
     const recStart = performance.now();
     bruteForce(
-      knapsackMaxWeight,
+      knapsackSizes[i],
       testSet[i],
       testSet[i].length,
       measurements,
@@ -76,7 +106,7 @@ for (let i = 0; i < tests; i++) {
 
   if (shouldOutputTestResults) {
     testsResults.bruteForce[i + 1] = {
-      knapsackMaxWeight,
+      knapsackMaxWeight: knapsackSizes[i],
       inputSize: testSet[i].length,
       executionTimeInMS: executionTimes.reduce((acc, cur) => acc + cur, 0),
       executionTimeMean: CoolMath.mean(executionTimes),
@@ -96,7 +126,7 @@ measurements.iterations = 0;
 
 console.log('Dynamic Programming Approach');
 for (let i = 0; i < tests; i++) {
-  console.log(`Running Test ${i + 1} with ${knapsackMaxWeight} as knapsack max weight`);
+  console.log(`Running Test ${i + 1} with ${knapsackSizes[i]} as knapsack max weight`);
   console.log(`Running with ${testSet[i].length} items`);
 
   let executionTimes: number[] = [];
@@ -104,7 +134,7 @@ for (let i = 0; i < tests; i++) {
   for (let j = 0; j < trialsPerTest; j++) {
     const dynStart = performance.now();
     memoized(
-      knapsackMaxWeight,
+      knapsackSizes[i],
       testSet[i],
       testSet[i].length,
       measurements,
@@ -123,7 +153,7 @@ for (let i = 0; i < tests; i++) {
 
   if (shouldOutputTestResults) {
     testsResults.memoized[i + 1] = {
-      knapsackMaxWeight,
+      knapsackMaxWeight: knapsackSizes[i],
       inputSize: testSet[i].length,
       executionTimeInMS: executionTimes.reduce((acc, cur) => acc + cur, 0),
       executionTimeMean: CoolMath.mean(executionTimes),
