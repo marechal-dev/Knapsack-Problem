@@ -1,3 +1,8 @@
+export enum RoundingMethod {
+  Floor,
+  Ceil,
+}
+
 export class CoolMath {
   public static mean(values: number[]): number {
     let summation = 0;
@@ -18,5 +23,26 @@ export class CoolMath {
         .map((x) => Math.pow(x - mean, 2))
         .reduce((acc, current) => acc + current) / n
     );
+  }
+
+  public static valueForPercentage(
+    whole: number,
+    percentage: number,
+  ) {
+    return (whole * percentage) / 100
+  }
+
+  public static integerValueForPercentage(
+    whole: number,
+    percentage: number,
+    roundingMethod = RoundingMethod.Floor
+  ) {
+    const x = (whole * percentage) / 100;
+
+    if (roundingMethod === RoundingMethod.Floor) {
+      return Math.floor(x);
+    }
+
+    return Math.ceil(x);
   }
 }
